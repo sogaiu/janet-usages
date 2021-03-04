@@ -21,8 +21,8 @@ not:
 # => (:hi 1)
 ----
 
-* More than one expression + expected value comment can be placed in
-  a comment block.  For example, in the following:
+* More than one expression + expected value comment pair (comment block test)
+  can be placed in a comment block.  For example, for the following:
 +
 [source,janet]
 ----
@@ -39,9 +39,9 @@ not:
 +
 two tests will be created and executed.
 
-* It's also fine to put other forms in the comment block that don't
-  have expected value info appearing after them, all such forms will
-  be included in tests.  For example, in the following:
+* It's also fine to put other forms in the comment block that don't have
+  expected value comments appearing directly after them.  All such forms
+  will be executed.  For example, in the following:
 +
 [source,janet]
 ----
