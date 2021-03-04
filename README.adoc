@@ -1,9 +1,9 @@
-= janet-usages - Executable Usage Examples
+= janet-usages - Verifiable Usage Examples
 :toc:
 
 == Aim
 
-Encourage the creation of illustrative usage examples to help potential
+Encourage the creation of verifiable usage examples to help potential
 users form appropriate mental models.
 
 == Status and Warnings
@@ -13,7 +13,7 @@ link:doc/warning.adoc[fine print].
 
 == How
 
-* Within `comment` blocks, put expressions / forms to be tested along
+* Within `comment` blocks, put expressions / forms to be verified along
   with brief records of expected values:
 +
 [source,janet]
@@ -29,12 +29,13 @@ link:doc/warning.adoc[fine print].
 Note the use of a single line comment and `=>` to express an
 expected return value.
 +
-One might call the form + expected value comment a "comment block
-test".
+One might call the combination of the form and the comment with the expected
+value a "comment block test".
 +
-See link:doc/tips.adoc[Usage / Test Writing Tips] for more details.
+See link:doc/tips.adoc[Usage Writing Tips] for more details.
 
-* Once some setup steps are followed, tests can be run by: `jpm test`
+* Once some setup steps are followed, usage examples can be run by:
+  `jpm test`
 
 == Setup
 
@@ -63,7 +64,7 @@ Now it should look something like:
 ├── project.janet
 └── test
     ├── test.janet
-    └── usages.janet   <-- copied this file
+    └── usages.janet   <-- copied this file into place
 ----
 
 If `jpm test` is executed and there isn't already a `usages` directory,
@@ -91,8 +92,8 @@ various files and directories.
 
 To run the tests and get a report: `jpm test`
 
-Add more tests / examples by creating more comment block tests in
-files that live in the `usages` directory.
+Add more usage examples by creating more comment block tests in files
+that live in the `usages` directory.
 
 == Samples
 

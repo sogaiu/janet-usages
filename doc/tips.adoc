@@ -1,4 +1,4 @@
-= Usage / Test Writing Tips
+= Usage Writing Tips
 
 * Use `'()` or `[]` instead of `()` in some places to express return
   values, e.g.
@@ -21,7 +21,7 @@ not:
 # => (:hi 1)
 ----
 
-* More than one expression + expected value info pair can be placed in
+* More than one expression + expected value comment can be placed in
   a comment block.  For example, in the following:
 +
 [source,janet]

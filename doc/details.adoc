@@ -8,13 +8,13 @@
   such files as well.  These files will be used to generate files that
   can be executed as tests.
 
-* The directory housing the generated tests is named `.janet-usages`
+* The directory housing the generated test files is named `.janet-usages`
   and lives within one's project directory.
 
 * Test results and output (from stdout and stderr) are stored in a
-  subdirectory of `.janet-usages`.  The name of this
-  subdirectory is generated each time and it should be very unlikely
-  to lead to collisions.
+  subdirectory of `.janet-usages`.  The name of this subdirectory is
+  generated each time and it should be very unlikely to lead to
+  collisions.
 
 == Concrete Example
 
@@ -36,10 +36,10 @@
     └── grammar.janet
 ----
 
-Once the tests have completed running, there should be a subdirectory
-in `.janet-usages` that contains test results and output.  The name
-of this subdirectory is highly likely to be different each time.  An
-example is `.1614856826-00d80fdb386c5068-judge-gen`.
+Once the test files have completed running, there should be a
+subdirectory in `.janet-usages` that contains test results and output.
+The name of this subdirectory is highly likely to be different each
+time.  An example is `.1614856826-00d80fdb386c5068-judge-gen`.
 
 * Test results have a name like `<n>-<filename>.jimage` where `<n>` is
   a number and `<filename>` is obtained from a source file's name.  An
