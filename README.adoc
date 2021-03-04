@@ -1,0 +1,107 @@
+= janet-usages - Executable Usage Examples
+:toc:
+
+== Aim
+
+Encourage the creation of illustrative usage examples to help potential
+users form appropriate mental models.
+
+== Status and Warnings
+
+This is an early stage project.  Be sure to examine the
+link:doc/warning.adoc[fine print].
+
+== How
+
+* Within `comment` blocks, put expressions / forms to be tested along
+  with brief records of expected values:
++
+[source,janet]
+----
+(comment
+
+  (- 1 1)
+  # => 0
+
+)
+----
++
+Note the use of a single line comment and `=>` to express an
+expected return value.
++
+One might call the form + expected value comment a "comment block
+test".
++
+See link:doc/tips.adoc[Usage / Test Writing Tips] for more details.
+
+* Once some setup steps are followed, tests can be run by: `jpm test`
+
+== Setup
+
+Setting things up is mostly a matter of copying a single file.
+
+Suppose there's a project directory like:
+
+----
+.
+├── my-src-dir
+│   └── fun.janet
+├── project.janet
+└── test
+    └── test.janet
+----
+
+Copy the file `test/usages.janet` from this repository to the target
+project's `test` subdirectory.
+
+Now it should look something like:
+
+----
+.
+├── my-src-dir
+│   └── fun.janet
+├── project.janet
+└── test
+    ├── test.janet
+    └── usages.janet   <-- copied this file
+----
+
+If `jpm test` is executed and there isn't already a `usages` directory,
+it will be created along with a `sample.janet` file:
+
+----
+.
+├── my-src-dir
+│   └── fun.janet
+├── project.janet
+├── test
+│   ├── test.janet
+│   └── usages.janet
+└── usages            <-- created this directory
+    └── sample.janet  <-- created this file
+----
+
+`sample.janet` is just an example.  Please feel free to modify it or
+erase it after examining it.
+
+See link:doc/details.adoc[Details] for additional information regarding the
+various files and directories.
+
+== Usage
+
+To run the tests and get a report: `jpm test`
+
+Add more tests / examples by creating more comment block tests in
+files that live in the `usages` directory.
+
+== Samples
+
+This repository also has a `usages` directory with some examples.
+
+== Acknowledgments
+
+* andrewchambers - suggestion and explanation
+* bakpakin - janet, jpm, helper.janet, path.janet, peg for janet, etc.
+* pepe - discussion, One-Shot Power Util Solver ™ motivation, and naming
+* pyrmont - discussion and exploration
+* Saikyun - discussion and testing

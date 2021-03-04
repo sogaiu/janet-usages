@@ -1,0 +1,76 @@
+= Details
+:toc:
+
+== Basics
+
+* The `usages` directory should contain files with comment block tests
+  in them.  Subdirectories of `usages` are recursively searched for
+  such files as well.  These files will be used to generate files that
+  can be executed as tests.
+
+* The directory housing the generated tests is named `.janet-usages`
+  and lives within one's project directory.
+
+* Test results and output (from stdout and stderr) are stored in a
+  subdirectory of `.janet-usages`.  The name of this
+  subdirectory is generated each time and it should be very unlikely
+  to lead to collisions.
+
+== Concrete Example
+
+----
+.
+├── .janet-usages
+│   ├── .1614856826-00d80fdb386c5068-judge-gen
+│   │   ├── 0-grammar.jimage
+│   │   ├── stderr-0-grammar.txt
+│   │   └── stdout-0-grammar.txt
+│   ├── grammar.janet
+│   └── grammar.judge
+├── my-src-dir
+│   └── fun.janet
+├── project.janet
+├── test
+│   └── usages.janet
+└── usages
+    └── grammar.janet
+----
+
+Once the tests have completed running, there should be a subdirectory
+in `.janet-usages` that contains test results and output.  The name
+of this subdirectory is highly likely to be different each time.  An
+example is `.1614856826-00d80fdb386c5068-judge-gen`.
+
+* Test results have a name like `<n>-<filename>.judge` where `<n>` is
+  a number and `<filename>` is obtained from a source file's name.  An
+  example is `0-grammar.jimage`.
+
+* A test output file containing stdout output has a name like
+  `stdout-<n>-<filename>.txt`.  An example is `stdout-0-grammar.txt`.
+
+* A test output file containing stderr output has a name like
+  `stderr-<n>-<filename>.txt`.  An example is `stderr-0-grammar.txt`.
+
+== Discussion
+
+* The generated directory (e.g. `.janet-usages`) will contain a copy
+  of the source files from which the generated tests
+  (e.g. `grammar.judge`) are created.  The generated test files are
+  modified forms of the original source files (e.g. `grammar.janet`)
+  and may contain import forms referring to other source files.  In
+  order for these import forms to function properly, the original
+  source is copied and thus (most ordinary) relative imports should
+  continue to function in the context of the generated directory.
+
+* To clarify, the content of the source directory is recursively
+  copied to the generated tests directory.  As mentioned before, this
+  is for the purpose of import forms functioning correctly.
+
+* The generated test files use the suffix `.judge`.  This should be
+  sufficient to prevent collisions between the names of source files
+  (which should have extension `.janet`) and the names of generated
+  test files.
+
+* Co-existence with other testing methods is something the author has
+  an interest in.  Please report any encountered issues along these
+  lines.
