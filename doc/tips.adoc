@@ -1,6 +1,7 @@
 = Usage Writing Tips
 
 * As mentionined in the README, the basic form is:
++
 [source,janet]
 ----
 (comment
