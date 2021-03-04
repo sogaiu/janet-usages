@@ -41,7 +41,7 @@ in `.janet-usages` that contains test results and output.  The name
 of this subdirectory is highly likely to be different each time.  An
 example is `.1614856826-00d80fdb386c5068-judge-gen`.
 
-* Test results have a name like `<n>-<filename>.judge` where `<n>` is
+* Test results have a name like `<n>-<filename>.jimage` where `<n>` is
   a number and `<filename>` is obtained from a source file's name.  An
   example is `0-grammar.jimage`.
 
