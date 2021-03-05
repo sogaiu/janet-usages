@@ -75,18 +75,40 @@
   # => true
 
   (def results
-    '@[{:expected-value "usages"
+    '@[{:expected-value true
         :passed true
-        :name "line-20"
-        :test-form (base-no-ext "test/usages.janet")
+        :name "line-6"
+        :test-form (validate/valid-code? "true")
         :type :is
-        :expected-form "usages"
-        :test-value "usages"}])
+        :expected-form true
+        :test-value true}
+       {:expected-value false
+        :passed true
+        :name "line-9"
+        :test-form (validate/valid-code? "(")
+        :type :is
+        :expected-form false
+        :test-value false}
+       {:expected-value true
+        :passed true
+        :name "line-12"
+        :test-form (validate/valid-code? "()")
+        :type :is
+        :expected-form true
+        :test-value true}
+       {:expected-value false
+        :passed true
+        :name "line-15"
+        :test-form (validate/valid-code? "(]")
+        :type :is
+        :expected-form false
+        :test-value false}])
 
   (let [buf @""]
     (with-dyns [:out buf]
-      (summary/report @{"1-main.jimage" results}))
+      (summary/report @{"validate.jimage" results}))
     (string/has-prefix? "\nNo tests failed." buf))
   # => true
 
   )
+

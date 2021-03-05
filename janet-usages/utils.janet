@@ -32,7 +32,4 @@
   (utils/no-ext "/etc/man_db.conf")
   # => "/etc/man_db"
 
-  (utils/no-ext "test/usages.janet")
-  # => "test/usages"
-
   )

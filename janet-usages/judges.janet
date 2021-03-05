@@ -1,5 +1,6 @@
 (import ./generate :prefix "")
 (import ./jpm :prefix "")
+(import ./name :prefix "")
 (import ./path :prefix "")
 (import ./utils :prefix "")
 
@@ -37,13 +38,13 @@
 
   (def proj-root
     (path/join (os/getenv "HOME")
-               "src" "janet-usages"))
+               "src" name/prog-name))
 
   (def judge-root
-    (path/join proj-root ".janet-usages"))
+    (path/join proj-root name/dot-dir-name))
 
   (def src-root
-    (path/join proj-root "janet-usages"))
+    (path/join proj-root name/prog-name))
 
   (os/mkdir judge-root)
 
