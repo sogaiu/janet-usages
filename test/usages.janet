@@ -1296,6 +1296,11 @@
                         :output "/tmp/judge-gen-test-output.txt"})
 
   )
+(def name/prog-name
+  "janet-usages")
+
+(def name/dot-dir-name
+  ".janet-usages")
 (defn utils/rand-string
   [n]
   (->> (os/cryptorand n)
@@ -1329,9 +1334,6 @@
 
   (utils/no-ext "/etc/man_db.conf")
   # => "/etc/man_db"
-
-  (utils/no-ext "test/usages.janet")
-  # => "test/usages"
 
   )
 
@@ -1369,13 +1371,13 @@
 
   (def proj-root
     (path/join (os/getenv "HOME")
-               "src" "janet-usages"))
+               "src" name/prog-name))
 
   (def judge-root
-    (path/join proj-root ".janet-usages"))
+    (path/join proj-root name/dot-dir-name))
 
   (def src-root
-    (path/join proj-root "janet-usages"))
+    (path/join proj-root name/prog-name))
 
   (os/mkdir judge-root)
 
@@ -1627,7 +1629,7 @@
     (do
       (display/print-dashes)
       (print)
-      (print "janet-usages is starting...")
+      (print (string name/prog-name " is starting..."))
       (print)
       (display/print-dashes)
       # remove old judge directory
@@ -1661,7 +1663,8 @@
       (print)
       # XXX: if detecting that being run via `jpm test` is possible,
       #      may be can show following only when run from `jpm test`
-      (print "janet-usages is done, later output may be from `jpm test`")
+      (print (string name/prog-name
+                     " is done, later output may be from `jpm test`"))
       (print)
       (display/print-dashes)
       all-passed)
@@ -1678,12 +1681,12 @@
 
   (def proj-root
     (path/join (os/getenv "HOME")
-               "src" "janet-usages"))
+               "src" name/prog-name))
 
   (def src-root
-    (path/join proj-root "janet-usages"))
+    (path/join proj-root name/prog-name))
 
-  (runner/handle-one {:judge-dir-name ".janet-usages_janet-usages"
+  (runner/handle-one {:judge-dir-name name/dot-dir-name
                       :proj-root proj-root
                       :src-root src-root})
 
