@@ -9,6 +9,7 @@
 
 (import ./path :prefix "")
 (import ./runner :prefix "")
+(import ./sample :prefix "")
 (import ./utils :prefix "")
 
 # from the perspective of `jpm test`
@@ -36,16 +37,7 @@
         (path/join src-root "sample.janet"))
       (unless (os/stat sample-file-path)
         (eprintf "creating sample file: %s" sample-file-path)
-        (spit sample-file-path
-              ``
-              (comment
-
-                (+ 1 1)
-                # => 2
-
-                )
-
-              ``)))
+        (spit sample-file-path sample/content)))
     # generate and run tests
     (let [all-passed (runner/handle-one
                        {:judge-dir-name judge-dir-name
