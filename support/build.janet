@@ -16,18 +16,25 @@
 #       these limitations exist to make the "compilation" process easier.
 
 (import ./common)
+(import ./jpm :prefix "")
+(import ./path :prefix "")
 
 # expressed relative to project root
 (def src-root
   "janet-usages")
 
-# expressed relatitve to src-root
+# expressed relative to project root
+(def module-roots
+  ["judge-gen/judge-gen"])
+
+# order matters because we want overwriting
+(def all-modules
+  (array/concat (array ;module-roots)
+                src-root))
+
+# expressed relatitve to common/build-dir-name
 (def start-path
   "./main.janet")
-
-# expressed relative to src-root
-(def out-path
-  (string "../" common/out-path))
 
 # XXX: a hack -- could reuse parts of a better peg
 (def import-grammar
@@ -60,6 +67,19 @@
 
   )
 
+(defn prepare-build-dir
+  [build-dir modules]
+  (os/mkdir build-dir)
+  (assert (os/stat build-dir)
+          (string "build dir is missing: " build-dir))
+  (each module modules
+    # shhhhh
+    (with-dyns [:out @""]
+      # each item copied separately for platform consistency
+      (each item (os/dir module)
+        (def full-path (path/join module item))
+        (jpm/copy full-path build-dir)))))
+
 # create a single file of source given a specific starting janet file by:
 #
 # 1. starting at file-path, read line by line recording the content in
@@ -89,9 +109,19 @@
 
 (try
   (do
-    (os/cd src-root)
-    #
-    (build start-path out-path))
+    # prepare build directory and files
+    (prin "Copying source files to build dir... ")
+    (prepare-build-dir common/build-dir-name all-modules)
+    (print "done")
+    # build
+    (prin "Building... ")
+    (os/cd common/build-dir-name)
+    # result ends up in test directory
+    (def out-path
+      (path/join ".."
+                 (path/join "test" common/out-name)))
+    (build start-path out-path)
+    (print "done"))
   ([err]
     (eprint "building failed")
     (error err)))

@@ -1,4 +1,4 @@
-(import ../janet-usages/segments :prefix "")
+(import ../build/segments :prefix "")
 
 (comment
 

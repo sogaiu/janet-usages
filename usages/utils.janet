@@ -1,4 +1,4 @@
-(import ../janet-usages/utils :prefix "")
+(import ../build/utils :prefix "")
 
 (comment
 

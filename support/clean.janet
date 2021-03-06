@@ -1,8 +1,8 @@
 (import ./common)
+(import ./jpm :prefix "")
 
-# relative to the project root
-(def out-path
-  (string "./" common/out-path))
+(when (os/stat common/out-name)
+  (os/rm common/out-name))
 
-(when (os/stat out-path)
-  (os/rm out-path))
+(when (os/stat common/build-dir-name)
+  (jpm/rm common/build-dir-name))

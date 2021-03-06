@@ -1,3 +1,5 @@
-# relative to the project root
-(def out-path
+(def out-name
   "usages.janet")
+
+(def build-dir-name
+  "build")

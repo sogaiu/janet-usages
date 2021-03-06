@@ -1,4 +1,4 @@
-(import ../janet-usages/rewrite :prefix "")
+(import ../build/rewrite :prefix "")
 
 (comment
 

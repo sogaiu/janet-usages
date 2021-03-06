@@ -1,4 +1,4 @@
-(import ../janet-usages/pegs :prefix "")
+(import ../build/pegs :prefix "")
 
 (comment
 
