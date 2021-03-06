@@ -52,8 +52,9 @@ Suppose there's a project directory like:
     └── test.janet
 ----
 
-Copy the file `test/usages.janet` from this repository to the target
-project's `test` subdirectory.
+Copy the file
+https://gitlab.com/sogaiu/janet-usages/-/raw/master/test/usages.janet[test/usages.janet]
+from this repository to the target project's `test` subdirectory.
 
 Now it should look something like:
 
