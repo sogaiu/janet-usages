@@ -56,7 +56,7 @@ Copy the file
 https://gitlab.com/sogaiu/janet-usages/-/raw/master/test/usages.janet[test/usages.janet]
 from this repository to the target project's `test` subdirectory.
 
-Alternatively, from the target project's `test` subdirectory:
+Alternatively, from the target project's `test` subdirectory this might work:
 
 ----
 curl -O https://gitlab.com/sogaiu/janet-usages/-/raw/master/test/usages.janet
