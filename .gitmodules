@@ -1,0 +1,3 @@
+[submodule "judge-gen"]
+	path = judge-gen
+	url = https://gitlab.com/sogaiu/judge-gen
