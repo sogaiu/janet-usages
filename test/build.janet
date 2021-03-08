@@ -223,6 +223,7 @@
 
 (defn display/print-color
   [msg color]
+  # XXX: what if color doesn't match...
   (let [color-num (match color
                     :black 30
                     :blue 34
@@ -244,6 +245,18 @@
 (defn display/print-dashes
   [&opt n]
   (print (display/dashes n)))
+
+(defn display/print-form
+  [form &opt color]
+  (def buf @"")
+  (with-dyns [:out buf]
+    (printf "%m" form))
+  (def msg (string/trimr buf))
+  (print ":")
+  (if color
+    (display/print-color msg color)
+    (prin msg))
+  (print))
 # some bits from jpm
 
 ### Copyright 2019 © Calvin Rose
@@ -339,6 +352,11 @@
     (set buf @"")
     (file/read f :all buf))
   buf)
+(def name/prog-name
+  "judge-gen")
+
+(def name/dot-dir-name
+  ".judge_judge-gen")
 # adapted from:
 #   https://janet-lang.org/docs/syntax.html
 
@@ -751,14 +769,14 @@
        :s-line 1
        :end 12}]) # => true
 
-  (deep=
-    #
-    (peg/match pegs/top-level sample-source 12)
-    #
+  (def result
     @[{:type :value
        :value "(+ 1 1)\n"
        :s-line 2
-       :end 20}]) # => true
+       :end 20}])
+
+  (peg/match pegs/top-level sample-source 12)
+  # => result
 
   (string/slice sample-source 12 20)
   # => "(+ 1 1)\n"
@@ -1293,7 +1311,9 @@
 
   # output to file
   (generate/handle-one {:input file-path
-                        :output "/tmp/judge-gen-test-output.txt"})
+                        :output (string "/tmp/"
+                                        name/prog-name
+                                        "-test-output.txt")})
 
   )
 (defn utils/rand-string
@@ -1318,9 +1338,10 @@
 (defn utils/no-ext
   [file-path]
   (when file-path
-    (when-let [rev (string/reverse file-path)
-               dot (string/find "." rev)]
-      (string/reverse (string/slice rev (inc dot))))))
+    (if-let [rev (string/reverse file-path)
+             dot (string/find "." rev)]
+      (string/reverse (string/slice rev (inc dot)))
+      file-path)))
 
 (comment
 
@@ -1330,52 +1351,54 @@
   (utils/no-ext "/etc/man_db.conf")
   # => "/etc/man_db"
 
-  (utils/no-ext "test/judge-gen.janet")
-  # => "test/judge-gen"
-
   )
 
 (defn judges/make-judges
   [src-root judge-root]
   (def subdirs @[])
+  (def out-in-tbl @{})
   (defn helper
     [src-root subdirs judge-root]
     (each path (os/dir src-root)
-      (def fpath (path/join src-root path))
-      (case (os/stat fpath :mode)
+      (def in-path (path/join src-root path))
+      (case (os/stat in-path :mode)
         :directory
         (do
-          (helper fpath (array/push subdirs path)
+          (helper in-path (array/push subdirs path)
                   judge-root)
           (array/pop subdirs))
         #
         :file
-        (when (string/has-suffix? ".janet" fpath)
+        (when (string/has-suffix? ".janet" in-path)
           (def judge-file-name
             (string (utils/no-ext path) ".judge"))
-          (unless (generate/handle-one
-                    {:input fpath
-                     :output (path/join judge-root
-                                        ;subdirs
-                                        judge-file-name)})
-            (eprintf "Test generation failed for: %s" fpath)
-            (eprintf "Please confirm validity of source file: %s" fpath)
-            (error nil))))))
+          (let [out-path (path/join judge-root
+                                    ;subdirs
+                                    judge-file-name)]
+            (unless (generate/handle-one {:input in-path
+                                          :output out-path})
+              (eprintf "Test generation failed for: %s" in-path)
+              (eprintf "Please confirm validity of source file: %s" in-path)
+              (error nil))
+            (put out-in-tbl
+                 (path/abspath out-path)
+                 (path/abspath in-path)))))))
   #
-  (helper src-root subdirs judge-root))
+  (helper src-root subdirs judge-root)
+  out-in-tbl)
 
 # since there are no tests in this comment block, nothing will execute
 (comment
 
   (def proj-root
     (path/join (os/getenv "HOME")
-               "src" "judge-gen"))
+               "src" name/prog-name))
 
   (def judge-root
-    (path/join proj-root ".judge_judge-gen"))
+    (path/join proj-root name/dot-dir-name))
 
   (def src-root
-    (path/join proj-root "judge-gen"))
+    (path/join proj-root name/prog-name))
 
   (os/mkdir judge-root)
 
@@ -1476,7 +1499,7 @@
     fpath))
 
 (defn judges/judge-all
-  [judge-root]
+  [judge-root test-src-tbl]
   (def results @{})
   (def file-paths
     (sort (judges/find-judge-files judge-root)))
@@ -1515,14 +1538,16 @@
                      :err-path err-path} err]
                 (eprintf "Command failed:\n  %p" command)
                 (eprint "Potentially relevant paths:")
-                (eprintf "  %s" results-full-path)
-                (eprintf "  %s" out-path)
-                (eprintf "  %s" err-path)
-                (eprintf "  %s" jf-full-path))
+                (eprintf "  %s" jf-full-path)
+                (eprintf "  %s" err-path))
               (eprintf "Unknown error:\n %p" err)))
           (error nil))))
+    (def src-full-path
+      (in test-src-tbl jf-full-path))
+    (assert src-full-path
+            (string "Failed to determine source for test: " jf-full-path))
     (put results
-         jf-full-path results-for-path)
+         src-full-path results-for-path)
     (++ count))
   results)
 
@@ -1534,6 +1559,7 @@
   (var total-tests 0)
   (var total-passed 0)
   (def failures @{})
+  # analyze results
   (eachp [fpath test-results] results
     (def name (path/basename fpath))
     (when test-results
@@ -1550,36 +1576,48 @@
           (array/push fails test-result)))
       (when (not (empty? fails))
         (put failures fpath fails))))
-  (when (pos? (length failures))
-    (print))
-  (eachp [fpath failed-tests] failures
-    (print fpath)
+  # report any failures
+  (var i 0)
+  (each fpath (sort (keys failures))
+    (def failed-tests (get failures fpath))
     (each fail failed-tests
       (def {:test-value test-value
             :expected-value expected-value
             :name test-name
             :passed test-passed
             :test-form test-form} fail)
+      (++ i)
       (print)
-      (display/print-color (string "  failed: " test-name) :red)
+      (prin "--(")
+      (display/print-color i :cyan)
+      (print ")--")
       (print)
-      (printf "    form: %M" test-form)
-      (prin "expected")
-      # XXX: this could use some work...
-      (if (< 30 (length (describe expected-value)))
-        (print ":")
-        (prin ": "))
-      (printf "%m" expected-value)
-      (prin "  actual")
-      # XXX: this could use some work...
-      (if (< 30 (length (describe test-value)))
-        (print ":")
-        (prin ": "))
-      (display/print-color (string/format "%m" test-value) :blue)
-      (print)))
+      (display/print-color "source file:" :yellow)
+      (print)
+      (display/print-color (string (utils/no-ext fpath) ".janet") :red)
+      (print)
+      (print)
+      #
+      (display/print-color "failed:" :yellow)
+      (print)
+      (display/print-color test-name :red)
+      (print)
+      #
+      (print)
+      (display/print-color "form" :yellow)
+      (display/print-form test-form)
+      #
+      (print)
+      (display/print-color "expected" :yellow)
+      (display/print-form expected-value)
+      #
+      (print)
+      (display/print-color "actual" :yellow)
+      (display/print-form test-value :blue)))
   (when (zero? (length failures))
     (print)
     (print "No tests failed."))
+  # summarize totals
   (print)
   (display/print-dashes)
   (when (= 0 total-tests)
@@ -1600,17 +1638,38 @@
   # => true
 
   (def results
-    '@[{:expected-value "judge-gen"
+    '@[{:expected-value true
         :passed true
-        :name "line-20"
-        :test-form (base-no-ext "test/judge-gen.janet")
+        :name "line-6"
+        :test-form (validate/valid-code? "true")
         :type :is
-        :expected-form "judge-gen"
-        :test-value "judge-gen"}])
+        :expected-form true
+        :test-value true}
+       {:expected-value false
+        :passed true
+        :name "line-9"
+        :test-form (validate/valid-code? "(")
+        :type :is
+        :expected-form false
+        :test-value false}
+       {:expected-value true
+        :passed true
+        :name "line-12"
+        :test-form (validate/valid-code? "()")
+        :type :is
+        :expected-form true
+        :test-value true}
+       {:expected-value false
+        :passed true
+        :name "line-15"
+        :test-form (validate/valid-code? "(]")
+        :type :is
+        :expected-form false
+        :test-value false}])
 
   (let [buf @""]
     (with-dyns [:out buf]
-      (summary/report @{"1-main.jimage" results}))
+      (summary/report @{"validate.jimage" results}))
     (string/has-prefix? "\nNo tests failed." buf))
   # => true
 
@@ -1628,7 +1687,7 @@
     (do
       (display/print-dashes)
       (print)
-      (print "judge-gen is starting...")
+      (print (string name/prog-name " is starting..."))
       (print)
       (display/print-dashes)
       # remove old judge directory
@@ -1649,12 +1708,13 @@
       # create judge files
       (prin "Creating tests files... ")
       (flush)
-      (judges/make-judges src-root judge-root)
+      (def ts-tbl
+        (judges/make-judges src-root judge-root))
       (print "done")
       # judge
-      (print "Judging...")
+      (print "Running tests...")
       (def results
-        (judges/judge-all judge-root))
+        (judges/judge-all judge-root ts-tbl))
       (display/print-dashes)
       # summarize results
       (def all-passed
@@ -1662,7 +1722,8 @@
       (print)
       # XXX: if detecting that being run via `jpm test` is possible,
       #      may be can show following only when run from `jpm test`
-      (print "judge-gen is done, later output may be from `jpm test`")
+      (print (string name/prog-name
+                     " is done, later output may be from `jpm test`"))
       (print)
       (display/print-dashes)
       all-passed)
@@ -1679,12 +1740,12 @@
 
   (def proj-root
     (path/join (os/getenv "HOME")
-               "src" "judge-gen"))
+               "src" name/prog-name))
 
   (def src-root
-    (path/join proj-root "judge-gen"))
+    (path/join proj-root name/prog-name))
 
-  (runner/handle-one {:judge-dir-name ".judge_judge-gen"
+  (runner/handle-one {:judge-dir-name name/dot-dir-name
                       :proj-root proj-root
                       :src-root src-root})
 
