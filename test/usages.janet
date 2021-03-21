@@ -332,6 +332,18 @@
     (def path (string/join (slice segs 0 i) jpm/sep))
     (unless (empty? path) (os/mkdir path))))
 
+(defn jpm/copy-continue
+  "Copy a file or directory recursively from one location to another."
+  [src dest]
+  (print "copying " src " to " dest "...")
+  (if jpm/is-win
+    (let [end (last (peg/match jpm/path-splitter src))
+          isdir (= (os/stat src :mode) :directory)]
+      (jpm/shell "C:\\Windows\\System32\\xcopy.exe"
+                 (string/replace "/" "\\" src)
+                 (string/replace "/" "\\" (if isdir (string dest "\\" end) dest))
+                 "/y" "/s" "/e" "/i" "/c"))
+    (jpm/shell "cp" "-rf" src dest)))
 (defn input/slurp-input
   [input]
   (var f nil)
@@ -515,10 +527,9 @@
         p-len (parser/consume p form-bytes)]
     (when (parser/error p)
       (break false))
-    (let [_ (parser/eof p)
-          p-err (parser/error p)]
-      (and (= (length form-bytes) p-len)
-           (nil? p-err)))))
+    (parser/eof p)
+    (and (= (length form-bytes) p-len)
+         (nil? (parser/error p)))))
 
 (comment
 
@@ -542,9 +553,9 @@
 (defn- pegs/track-top-level-peg
   [l-delim r-delim]
   ~(sequence (drop (cmt (capture ,l-delim)
-                                 ,|(do
-                                     (++ pegs/topish-level)
-                                     $)))
+                        ,|(do
+                            (++ pegs/topish-level)
+                            $)))
              :root
              (choice (drop (cmt (capture ,r-delim)
                                 ,|(do
@@ -674,7 +685,7 @@
 
     )
     ``)
-    # => result
+  # => result
 
   # thanks Saikyun
   (peg/match
@@ -760,7 +771,7 @@
   (pegs/parse-comment-block comment-in-struct-str)
   # => '@["" "@{:bye 10 #hello\n   }\n\n  " "(+ 1 1)\n  " (:returns "2" 7)]
 
-)
+  )
 
 # recognize next top-level form, returning a map
 # modify a copy of grammar/janet
@@ -1207,38 +1218,37 @@
 
   (def code-buf
     @``
-    (def a 1)
+     (def a 1)
 
-    (comment
+     (comment
 
-      (+ a 1)
-      # => 2
+       (+ a 1)
+       # => 2
 
-      (def b 3)
+       (def b 3)
 
-      (- b a)
-      # => 2
+       (- b a)
+       # => 2
 
-    )
-    ``)
+     )
+     ``)
 
   (deep=
     (segments/parse code-buf)
     #
-    @[{:value "    (def a 1)\n\n    "
+    @[{:value "(def a 1)\n\n"
        :s-line 1
        :type :value
-       :end 19}
-      {:value (string "(comment\n\n      "
-                      "(+ a 1)\n      "
-                      "# => 2\n\n      "
-                      "(def b 3)\n\n      "
-                      "(- b a)\n      "
-                      "# => 2\n\n    "
-                      ")\n    ")
+       :end 11}
+      {:value (string "(comment\n\n  "
+                      "(+ a 1)\n  "
+                      "# => 2\n\n  "
+                      "(def b 3)\n\n  "
+                      "(- b a)\n  "
+                      "# => 2\n\n)")
        :s-line 3
        :type :value
-       :end 112}]
+       :end 75}]
     ) # => true
 
   )
@@ -1482,8 +1492,10 @@
     (try
       (with [ef (file/open err-path :w)]
         (with [of (file/open out-path :w)]
-          (os/execute command :px {:err ef
-                                   :out of})
+          (let [ecode (os/execute command :px {:err ef
+                                               :out of})]
+            (when (not (zero? ecode))
+              (eprintf "non-zero exit code: %d" ecode)))
           (file/flush ef)
           (file/flush of)))
       ([_]
@@ -1521,7 +1533,7 @@
                         (some :h)
                         "-"
                         "judge-gen")
-    (judges/make-results-dir-path ""))
+             (judges/make-results-dir-path ""))
   # => @[]
 
   )
@@ -1575,10 +1587,24 @@
               # XXX: if more errors need to be handled, check err-type
               (let [{:out-path out-path
                      :err-path err-path} err]
+                (eprint)
                 (eprintf "Command failed:\n  %p" command)
+                (eprint)
                 (eprint "Potentially relevant paths:")
                 (eprintf "  %s" jf-full-path)
-                (eprintf "  %s" err-path))
+                #
+                (def err-file-size (os/stat err-path :size))
+                (when (pos? err-file-size)
+                  (eprintf "  %s" err-path))
+                #
+                (eprint)
+                (when (pos? err-file-size)
+                  (eprint "Start of test stderr output")
+                  (eprint)
+                  (eprint (string (slurp err-path)))
+                  #(eprint)
+                  (eprint "End of test stderr output")
+                  (eprint)))
               (eprintf "Unknown error:\n %p" err)))
           (error nil))))
     (def src-full-path
@@ -1714,7 +1740,6 @@
 
   )
 
-
 (defn runner/handle-one
   [opts]
   (def {:judge-dir-name judge-dir-name
@@ -1742,7 +1767,7 @@
         # each item copied separately for platform consistency
         (each item (os/dir src-root)
           (def full-path (path/join src-root item))
-          (jpm/copy full-path judge-root)))
+          (jpm/copy-continue full-path judge-root)))
       (print "done")
       # create judge files
       (prin "Creating tests files... ")
