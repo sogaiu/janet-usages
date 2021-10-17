@@ -3,15 +3,15 @@
   # This comment block has tests
   (comment
 
-    # 1) A comment block test has two pieces:
+    # 1. A comment block test has two pieces:
     #
-    # 1) The form
-    # 2) The expected value comment
+    # a. The form
+    # b. The expected value comment
     #
     (+ 1 1)
     # => 2
 
-    # 2) Another example
+    # 2. Another example
 
     # The following form is executed, as it has no expected value, but its
     # effects will remain valid for subsequent portions
